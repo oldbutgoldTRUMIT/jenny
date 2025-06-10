@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Audio Uploads</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+
+    :root {
+      --bg-overlay-color: rgba(255 255 255 / 0.85);
+      --container-max-width: 960px;
+      --border-radius: 0.75rem;
+      --shadow-light: 0 4px 6px rgba(0,0,0,0.1);
+      --shadow-hover: 0 8px 12px rgba(0,0,0,0.15);
+      --font-color: #374151;
+      --heading-color: #111827;
+      --accent-color: #2563eb;
+      --transition-duration: 0.3s;
+    }
+
+    /* Reset and base */
+    * {
+      box-sizing: border-box;
+    }
+
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      font-family: 'Poppins', sans-serif;
+      background: url('jenny.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: var(--font-color);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Overlay to soften background for readability */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: var(--bg-overlay-color);
+      pointer-events: none;
+      z-index: 0;
+      backdrop-filter: saturate(180%) blur(8px);
+    }
+
+    main {
+      z-index: 1;
+      margin: auto;
+      max-width: var(--container-max-width);
+      width: 90%;
+      padding: 4rem 1.5rem 6rem;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    h1 {
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin-bottom: 0;
+      line-height: 1.1;
+      text-align: center;
+    }
+
+    label.file-input-label {
+      display: inline-block;
+      cursor: pointer;
+      background-color: var(--accent-color);
+      color: white;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-light);
+      transition: background-color var(--transition-duration), box-shadow var(--transition-duration), transform var(--transition-duration);
+      user-select: none;
+      margin: 0 auto;
+      text-align: center;
+      max-width: fit-content;
+      font-size: 1.1rem;
+    }
+
+    label.file-input-label:hover,
+    label.file-input-label:focus {
+      background-color: #1d4ed8;
+      box-shadow: var(--shadow-hover);
+      transform: scale(1.05);
+      outline: none;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    section.audio-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    article.audio-card {
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-light);
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      transition: box-shadow var(--transition-duration), transform var(--transition-duration);
+    }
+    article.audio-card:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-3px);
+    }
+
+    article.audio-card strong {
+      color: var(--heading-color);
+      font-weight: 600;
+      overflow-wrap: break-word;
+    }
+
+    audio {
+      width: 100%;
+      outline-offset: 4px;
+      border-radius: 0.5rem;
+      box-shadow: inset 0 0 4px rgb(0 0 0 / 0.1);
+    }
+
+    @media (max-width: 400px) {
+      h1 {
+        font-size: 2.5rem;
+      }
+
+      main {
+        padding: 3rem 1rem 4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>My Audio Uploads</h1>
+
+    <label for="audio-upload" class="file-input-label" tabindex="0">Choose Audio Files</label>
+    <input type="file" id="audio-upload" accept="audio/*" multiple />
+
+    <section class="audio-list" aria-live="polite" aria-label="Uploaded audio files"></section>
+  </main>
+
+  <script>
+    const fileInput = document.getElementById('audio-upload');
+    const audioList = document.querySelector('.audio-list');
+
+    // Accessibility: trigger file input on label keyboard focus enter or space
+    const fileInputLabel = document.querySelector('.file-input-label');
+    fileInputLabel.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    function formatFileName(name) {
+      if (name.length > 30) {
+        return name.slice(0, 27) + '...';
+      }
+      return name;
+    }
+
+    fileInput.addEventListener('change', () => {
+      const files = Array.from(fileInput.files);
+      audioList.innerHTML = ''; // Reset existing cards on new upload
+
+      if (files.length === 0) {
+        audioList.innerHTML = '<p>No audio files uploaded yet.</p>';
+        return;
+      }
+
+      files.forEach((file) => {
+        if (!file.type.startsWith('audio/')) return; // skip non-audio files
+
+        const audioUrl = URL.createObjectURL(file);
+
+        const article = document.createElement('article');
+        article.className = 'audio-card';
+
+        const title = document.createElement('strong');
+        title.textContent = formatFileName(file.name);
+
+        const audio = document.createElement('audio');
+        audio.controls = true;
+        audio.src = audioUrl;
+        audio.setAttribute('preload', 'none');
+        audio.setAttribute('aria-label', file.name);
+
+        article.appendChild(title);
+        article.appendChild(audio);
+
+        audioList.appendChild(article);
+      });
+    });
+  </script>
+</body>
+</html>
+
